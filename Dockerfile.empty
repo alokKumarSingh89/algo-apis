@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+
+COPY . /app/
+
+WORKDIR /app/
+
+#RUn
+CMD ["python", "-m", "http.server"]

@@ -1,0 +1,9 @@
+FastAPI
+gunicorn
+uvicorn
+python-decouple
+rav
+fyers-apiv3
+firebase_admin
+yfinance
+pandas
