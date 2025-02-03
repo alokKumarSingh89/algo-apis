@@ -3,7 +3,10 @@ gunicorn
 uvicorn
 python-decouple
 rav
-fyers-apiv3
+fyers_apiv3
 firebase_admin
 yfinance
 pandas
+setuptools
+pydantic_settings
+dhanhq

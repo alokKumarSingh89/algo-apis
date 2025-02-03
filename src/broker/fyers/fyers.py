@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 
 from fyers_apiv3 import fyersModel
 
-from broker.fyers.token import Token
+from src.broker.fyers.token import Token
 from src.env import config
 
 class Fyers:
@@ -76,7 +76,7 @@ class Fyers:
             token = self.get_token()
             self.__token.save_token(token)
         if self.__app is None:
-            self.__app = fyersModel.FyersModel(client_id=fyers["client_id"], token=self.__token.get_token(),
+            self.__app = fyersModel.FyersModel(client_id=self.__client_id, token=self.__token.get_token(),
                                                is_async=False, log_path="")
         return self.__app
 

@@ -31,3 +31,10 @@ def load_code(collection, document):
   else:
     return None
   
+def get_scripts():
+  doc_ref = db.collection("scripts").document("nse")
+  doc = doc_ref.get()
+  if doc.exists:
+    return doc.to_dict()
+  return None
+  
