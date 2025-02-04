@@ -12,9 +12,14 @@ db = firestore.client()
 
 
 
-def test():
-  doc_ref = db.collection("users").document("alovelace")
-  doc_ref.set({"first": "Ada", "last": "Lovelace", "born": 1815})
+def add_collection(collection, document, data):
+  
+  doc_ref = db.collection(collection).document(document)
+  if doc_ref.get().exists:
+    doc_ref.update(data)
+  else:
+    doc_ref.set(data)
+
 
 def add_nse_code(collection, document, code):
   doc_ref = db.collection(collection).document(document)
