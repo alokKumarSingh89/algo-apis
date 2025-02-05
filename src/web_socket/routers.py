@@ -14,10 +14,11 @@ socket_data = {}
 web_socket = FyerSocket(socket_data)
 MODE = settings.MODE
 
-@socket.get("/")
-def start_socket():
+@socket.get("")
+def start_socket(mode):
     # Need to change the logic
-    if MODE == "socket":
+    print(mode)
+    if mode == "socket":
         web_socket.restart()
     else:
         return "Not enable"
@@ -53,5 +54,3 @@ def save_socket_data():
     except Exception as e:
         print(e)
     return records
-
-start_socket()

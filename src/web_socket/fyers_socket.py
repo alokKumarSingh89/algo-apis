@@ -1,6 +1,6 @@
 
 from src.broker.fyers.fyers import Fyers
-from src.firebase.firebase import get_scripts
+from src.firebase.firebase import load_code
 from fyers_apiv3.FyersWebsocket import data_ws
 from datetime import datetime
 
@@ -79,16 +79,17 @@ class FyerSocket():
         self.fyer_data = fyers.get()
         self.fyer_token = fyers.get_save_token()
         self.isRuning = False
-        self.script = get_scripts()
+        self.script = load_code("options", "fyers")
         self.fyers = None
         self.symbolList = []
         self.socket_data = socket_data
+        self.script_config = load_code("script_config", "fyers")
     def get_strick(self, value):
         response = self.fyer_data.optionchain(data = {
                 "symbol":value,
                 "strikecount":15,
                 "timestamp": ""
-            });
+            })
         symbolList = []
         
         for data in response["data"]["optionsChain"]:
@@ -98,10 +99,23 @@ class FyerSocket():
     def start(self):
         self.isRuning = True
         self.symbolList = []
-        for key, value in self.script.items():
-            data = self.get_strick(value)
-            self.symbolList = self.symbolList + data
-        self.fyers = start_socket(self.symbolList, self.fyer_token, self.socket_data)
+        # print(self.script_config)
+        for sc in self.script.values():
+            if sc is None:
+                continue
+            exp = self.script_config[f'{sc["expiry_type"]}_exp']
+            months = self.script_config[f'{sc["expiry_type"]}_month'].split(",")
+            script = self.script_config[sc["name"]]
+            expiry = sc["expiry"].split("-")
+            Ex = script["key"].split(":")[0]
+            Ex_UnderlyingSymbol = sc["name"]
+            YY = expiry[0][-2:]
+            M = expiry[0]
+            print(sc, exp, months, script)
+        # for key, value in self.script.items():
+        #     data = self.get_strick(value)
+        #     self.symbolList = self.symbolList + data
+        # self.fyers = start_socket(self.symbolList, self.fyer_token, self.socket_data)
     def restart(self):
         if self.isRuning == True:
             self.stop()
