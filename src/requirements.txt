@@ -10,3 +10,4 @@ pandas
 setuptools
 pydantic_settings
 dhanhq
+logzero

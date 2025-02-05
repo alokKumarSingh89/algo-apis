@@ -42,15 +42,28 @@ def get_script_data(script_name: str):
 
 @socket.get("/save")
 def save_socket_data():
-    records = []
+    records = None
+    dataframe = None
     if len(socket_data.keys()) == 0:
         return "No Data"
     for key, value in socket_data.items():
-        records = records + value
+        if records is None:
+            records = value;
+        else:
+            records["scripts"] = records["scripts"] + value["scripts"]
+            records["open"] =records["open"] + value["open"]
+            records["close"] = records["close"] +value["close"]
+            records["low"] = records["low"] + value["low"]
+            records["high"] = records["high"] + value["high"]
+            records["volumn"] =  records["volumn"]+value["volumn"]
+            records["date"] = records["date"] + value["date"]
+    
     try:
         dataframe = pd.DataFrame(records)
+        dataframe.fillna('')
         filename = datetime.today().strftime('%Y:%m:%d')
         dataframe.to_csv(f"{filename}.csv")
     except Exception as e:
         print(e)
+    
     return records

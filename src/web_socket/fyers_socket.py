@@ -3,11 +3,18 @@ from src.broker.fyers.fyers import Fyers
 from src.firebase.firebase import load_code
 from fyers_apiv3.FyersWebsocket import data_ws
 from datetime import datetime
+import logzero
+from logzero import logger
+
+# non-rotating logfile
+logzero.logfile("./logfile.log")
+logzero.json()
 
 def start_socket(symbolList, fyer_token, socket_data):
     print("Start Point")
     for symbol in symbolList:
         socket_data[symbol] = {
+            "scripts":[],
             "open": [],
             "close": [],
             "high": [],
@@ -20,9 +27,10 @@ def start_socket(symbolList, fyer_token, socket_data):
         message (dict): The received message from the WebSocket."""
         
         try:
-            if message.get("ltp") is not None:
+            if message.get("ltp") is not None and ((message.get('last_traded_time') is not None) or (message.get('exch_feed_time') is not None)):
                 script_symbol = message.get("symbol")
-                
+                last_traded_time = None
+                # logger.debug(message)
                 if message.get('last_traded_time') is not None:
                     last_traded_time = message.get('last_traded_time')
                     last_traded_date = datetime.fromtimestamp(last_traded_time).strftime('%d-%m-%y %H:%M:%S')
@@ -33,12 +41,13 @@ def start_socket(symbolList, fyer_token, socket_data):
                     socket_data[script_symbol]["date"].append(last_traded_date)
                 ltp = message.get('ltp')
                 vol_traded_today = message.get("vol_traded_today") or 0
+                socket_data[script_symbol]["scripts"].append(script_symbol)
                 socket_data[script_symbol]["open"].append(ltp)
                 socket_data[script_symbol]["close"].append(ltp)
                 socket_data[script_symbol]["high"].append(ltp)
                 socket_data[script_symbol]["low"].append(ltp)
                 socket_data[script_symbol]["volumn"].append(vol_traded_today)
-            print("Response:", ltp, script_symbol)
+            # print("Response:", ltp, script_symbol)
         except Exception as e:
             print(e)
         
@@ -55,7 +64,6 @@ def start_socket(symbolList, fyer_token, socket_data):
             # Specify the data type and symbols you want to subscribe to
         # data_type = "OnGeneral"
         data_type = "SymbolUpdate"
-        print("dd")
         fyers.subscribe(symbols=symbolList, data_type=data_type)
         fyers.keep_running()
         
@@ -84,17 +92,12 @@ class FyerSocket():
         self.symbolList = []
         self.socket_data = socket_data
         self.script_config = load_code("script_config", "fyers")
+    
     def get_strick(self, value):
-        response = self.fyer_data.optionchain(data = {
-                "symbol":value,
-                "strikecount":15,
-                "timestamp": ""
-            })
-        symbolList = []
-        
-        for data in response["data"]["optionsChain"]:
-            symbolList.append(data["symbol"])
-        return symbolList
+        response = self.fyer_data.quotes(data = {
+                "symbols":value
+        })
+        return response["d"][0]['v']['lp']
     
     def start(self):
         self.isRuning = True
@@ -110,12 +113,23 @@ class FyerSocket():
             Ex = script["key"].split(":")[0]
             Ex_UnderlyingSymbol = sc["name"]
             YY = expiry[0][-2:]
-            M = expiry[0]
-            print(sc, exp, months, script)
-        # for key, value in self.script.items():
-        #     data = self.get_strick(value)
-        #     self.symbolList = self.symbolList + data
-        # self.fyers = start_socket(self.symbolList, self.fyer_token, self.socket_data)
+            M = int(expiry[1])
+            dd:str = expiry[-1]
+            dd = dd.zfill(2)
+            strick_count = sc["strick_count"]
+            index = script["key"]
+            spot_price = self.get_strick(index)
+            # print(sc,self.script_config)
+            atm = round(spot_price / script["diff"]) * script["diff"]
+            self.symbolList.append(index)
+            for i in range(strick_count):
+                ce = atm + i*script["diff"]
+                pe = atm - i*script["diff"]
+                ce_strick = exp.format(Ex=Ex,Ex_UnderlyingSymbol=Ex_UnderlyingSymbol,YY=YY,M=months[M-1],MMM=months[M-1],dd=dd,Strike=ce,Opt_Type="CE")
+                pe_strick = exp.format(Ex=Ex,Ex_UnderlyingSymbol=Ex_UnderlyingSymbol,YY=YY,M=months[M-1],MMM=months[M-1],dd=dd,Strike=pe,Opt_Type="PE")
+                self.symbolList.append(ce_strick)
+                self.symbolList.append(pe_strick)
+        self.fyers = start_socket(self.symbolList, self.fyer_token, self.socket_data)
     def restart(self):
         if self.isRuning == True:
             self.stop()
