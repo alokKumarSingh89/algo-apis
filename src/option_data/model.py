@@ -3,9 +3,6 @@ from typing import List
 
 class ScriptDetail(BaseModel):
     name: str
-    exchange: str
-    expiry: str
-    expiry_flag: bool
     diff: int
     lots: int
     key: str
