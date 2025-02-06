@@ -1,6 +1,10 @@
 import yfinance as yf
 import pandas as pd
 from fastapi.responses import JSONResponse
+
+def gf_ltp(symbol):
+    data_frame = yf.download(symbol, period="1y", interval="1d")
+    return round(data_frame.iloc[-1]["Close"].to_dict()[symbol],2)
 # Fetch consolidated stock list for 500
 def fetch_script_csl(data):
     stock_list = {
@@ -50,6 +54,6 @@ def fetch_script_csl(data):
     df = pd.DataFrame(stock_list)
     df["date_high"] = df['date_high'].dt.strftime('%Y-%m-%d')
     df["date_low"] = df['date_low'].dt.strftime('%Y-%m-%d')
-    df.fillna('')
-    print(df)
-    return JSONResponse(content=df.to_dict())
+    df = df.fillna('')
+    return df
+

@@ -5,7 +5,11 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.log
+*.csv
+**/token/*
+.idea/
+.idea
 # Distribution / packaging
 .Python
 build/
