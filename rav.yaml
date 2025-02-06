@@ -1,6 +1,6 @@
 scripts:
-  runserver: MODE="run" uvicorn src.main:app --reload
-  web_socket: MODE="socket" uvicorn src.main:app --port 9000 --env-file .env.prod
+  runserver: uvicorn src.main:app --reload
+  web_socket: uvicorn src.main:app --port 9000
   build: docker build -f Dockerfile -t alog-app .
   run: docker run --env-file .env -p 8000:8000 --rm --name alog-app -it alog-app
   build_run:

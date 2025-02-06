@@ -5,6 +5,7 @@ from src.gfinance.router import gfinance
 from src.algo.routers import algo
 from src.web_socket.routers import socket
 from src.option_data.routers import option
+from src.etf.routers import etf
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -25,6 +26,7 @@ app.include_router(gfinance)
 app.include_router(algo)
 app.include_router(socket)
 app.include_router(option)
+app.include_router(etf)
 
 
 
