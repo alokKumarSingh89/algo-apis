@@ -6,6 +6,8 @@ from src.algo.routers import algo
 from src.web_socket.routers import socket
 from src.option_data.routers import option
 from src.etf.routers import etf
+from src.macd_daily.routers import macd_d
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from src.firebase.firebase import add_collection, load_code
 from src.etf.models import Etf
-from src.gfinance.helper import fetch_script_csl
+from src.gfinance.helper import fetch_script
 from datetime import datetime
 import pandas as pd
 import os
@@ -10,32 +10,31 @@ from src.broker.fyers.fyers import Fyers
 from src.gfinance.helper import gf_ltp
 
 fyers = Fyers().get()
-etf = APIRouter(prefix="/etf", tags=["ETF Ki Dukan"] )
+macd_d = APIRouter(prefix="/macd_d", tags=["MACD Based Buying"] )
 
 
-@etf.get("")
+@macd_d.get("")
 def welcome():
-    data:dict = load_code("stock_script","etf")
+    data:dict = load_code("stock_script","stocks")
     filename = f'etf_{datetime.now().strftime("%Y-%m-%d")}.csv'
-
+    
     try:
         if os.path.exists(folder_name+"/"+filename):
             df = pd.read_csv(folder_name+"/"+filename)
             df = df.fillna('')
-            # df = df.drop(columns=["Unnamed: 0"])
+            df = df.drop(columns=["Unnamed: 0"])
             best_for_today = df.nsmallest(10, 'change_in_per')
             return {"small":best_for_today.to_dict(orient='records')}
         else:
-            df  = fetch_script_csl(data)
-            df["change_in_per"] = ((df["current"]-df["52_low"])*100)/df["52_low"]
+            df  = fetch_script(data)
             save_file(df, filename)
-            return {"data":df}
+            return {"data":"df"}
         
     except Exception as e:
         return {"message":e.with_traceback()}
 
 
-@etf.post("")
+@macd_d.post("")
 def add_etf(body: Etf):
     if body.name == "":
         return {"message":"fails"}
@@ -43,7 +42,7 @@ def add_etf(body: Etf):
     add_collection("stock_script","etf",{key: body.name})
     
 
-@etf.post("/paper")
+@macd_d.post("/paper")
 def buy_etf(etf: Etf):
     if etf.name == "":
         return {"message":"fails"}
@@ -68,13 +67,22 @@ def buy_etf(etf: Etf):
     }})
     return {"message":f"{number_allowed} bought today"}
 
-@etf.get("/paper")
+@macd_d.get("/paper")
 def get_paper_detail():
     data:dict = paper_detail()
     for key, value in data.items():
-        if key not in ["capital", "div", "last_trade_day","remain_amount"]:
+        if key not in ["capital", "div", "last_trade_day"]:
             ltp = gf_ltp(key+".NS")
             data[key]["current_price"] = ltp
     
     return data
     
+
+
+# Run script to save the nse code for macd:
+# def execute():
+#     for i in ["CIPLA","ADANIPORTS","ITCOTELS","DREDDY","HFCLIFE","TECHM","INFY","AXISBANK","BRTANNIA","BPCL","HCLTECH","TTACONSUM","HDCBANK","RASIM","ELIANCE","INUSINDBK","ICIIBANK","SUNHARMA","KOTKBANK","WIPRO","BAJFINANCE","TCS","MARUTI","ESTLEIND","SILIFE","JWSTEEL","BAAJFINSV","ASIAPAINT","SHRIAMFIN","HIDALCO","HIDUNILVR","ADNIENT","LT","HEROMOTOCO","TATAOTORS","COAINDIA","ULTACEMCO","APOLOHOSP",\
+# "POWRGRID","ITC","EICHERMOT","TATSTEEL","SBIN","NTPC","ONGC","TITAN",\
+# "BHARTIARTL","BEL","TRENT"]:
+#         add_collection("stock_script","stocks",{i: i})
+# execute()

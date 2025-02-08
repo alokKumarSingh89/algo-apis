@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 def gf_ltp(symbol):
     data_frame = yf.download(symbol, period="1y", interval="1d")
     return round(data_frame.iloc[-1]["Close"].to_dict()[symbol],2)
+
 # Fetch consolidated stock list for 500
 def fetch_script_csl(data):
     stock_list = {
@@ -57,3 +58,22 @@ def fetch_script_csl(data):
     df = df.fillna('')
     return df
 
+
+def fetch_script(data, period="1y", interval="1d"):
+    for key, value in data.items():
+        a = value.split(":")
+        script_name = ""
+        
+        if len(a) == 1:
+            script_name = a[0]+".NS"
+        else:
+            script_name = a[1]+".NS"
+        try:
+            data_frame = yf.download(script_name, period=period, interval=interval)
+            data_frame = data_frame.fillna('')
+            return data_frame
+        except Exception  as e:
+            print(script_name, e)
+    
+    
+    
